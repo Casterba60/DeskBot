@@ -1,0 +1,3 @@
+../Core/Src/motor.c:9:6:Motor_Init	24	static
+../Core/Src/motor.c:16:6:Coast	16	static
+../Core/Src/motor.c:21:6:Set_Duty	16	static
