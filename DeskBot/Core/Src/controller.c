@@ -6,7 +6,8 @@
  */
 #include "controller.h"
 
-void PID_Init(PIDController* pid, float kp, float ki, float kd, float out_min, float out_max) {
+void PID_Init(PIDController* pid, float kp, float ki, float kd, float out_min, float out_max)
+{
 	pid->kp = kp;
 	pid->ki = ki;
 	pid->kd = kd;
@@ -17,7 +18,8 @@ void PID_Init(PIDController* pid, float kp, float ki, float kd, float out_min, f
 	pid->out_max = out_max;
 }
 
-int PID_Update(PIDController* pid, int setpoint, int measured, int dt) {
+int PID_Update(PIDController* pid, int setpoint, int measured, int dt)
+{
 	int error = setpoint - measured;
 	pid->integral += error*dt;
 	int derivative = (error - pid->prev_error)/dt;
@@ -32,7 +34,8 @@ int PID_Update(PIDController* pid, int setpoint, int measured, int dt) {
 	return pid->output;
 }
 
-void PID_Reset(PIDController* pid){
+void PID_Reset(PIDController* pid)
+{
     pid->integral = 0;
     pid->prev_error = 0;
     pid->output = 0;
