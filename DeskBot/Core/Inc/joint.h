@@ -15,7 +15,7 @@ typedef struct {
 	PIDController position_pid;
 	PIDController velocity_pid;
 
-	int desired_position; //input command (ticks or degs?)
+	int desired_position; //input command (encoder ticks)
 	int desired_velocity; //Output of position
 
 	int actual_position; //Encoder reading
@@ -25,6 +25,9 @@ typedef struct {
 	//motor and encoder
 	motor_t* p_mot; //pointer to motor struct
 	TIM_HandleTypeDef* encoderHandle; //pointer to encoder handle
+
+	int previousEncoderCount;
+	int encoder_init;
 
 	int enable;
 } joint;

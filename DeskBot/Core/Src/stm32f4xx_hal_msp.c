@@ -187,6 +187,8 @@ void HAL_TIM_Encoder_MspInit(TIM_HandleTypeDef* htim_encoder)
     /* TIM1 interrupt Init */
     HAL_NVIC_SetPriority(TIM1_UP_TIM10_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(TIM1_UP_TIM10_IRQn);
+    HAL_NVIC_SetPriority(TIM1_TRG_COM_TIM11_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(TIM1_TRG_COM_TIM11_IRQn);
     /* USER CODE BEGIN TIM1_MspInit 1 */
 
     /* USER CODE END TIM1_MspInit 1 */
@@ -345,10 +347,8 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef* htim)
     /**TIM5 GPIO Configuration
     PA0-WKUP     ------> TIM5_CH1
     PA1     ------> TIM5_CH2
-    PA2     ------> TIM5_CH3
-    PA3     ------> TIM5_CH4
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3;
+    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -392,6 +392,7 @@ void HAL_TIM_Encoder_MspDeInit(TIM_HandleTypeDef* htim_encoder)
     /* HAL_NVIC_DisableIRQ(TIM1_UP_TIM10_IRQn); */
     /* USER CODE END TIM1:TIM1_UP_TIM10_IRQn disable */
 
+    HAL_NVIC_DisableIRQ(TIM1_TRG_COM_TIM11_IRQn);
     /* USER CODE BEGIN TIM1_MspDeInit 1 */
 
     /* USER CODE END TIM1_MspDeInit 1 */

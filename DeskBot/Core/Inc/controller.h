@@ -14,6 +14,8 @@ typedef struct {
 	float ki;
 	float kd;
 	int integral;
+	int integral_clamp;
+	int tolerable_error;
 	int prev_error;
 	int output;
 	int out_min;
@@ -22,7 +24,7 @@ typedef struct {
 } PIDController;
 
 //Functions
-void PID_Init(PIDController* pid, float kp, float ki, float kd, float out_min, float out_max);
+void PID_Init(PIDController* pid, float kp, float ki, float kd, int integral_clamp,int tolerable_error, int out_min, int out_max);
 int PID_Update(PIDController* pid, int setpoint, int measured, int dt);
 void PID_Reset(PIDController* pid);
 

@@ -18,21 +18,21 @@ void Coast(motor_t* p_mot){
 	__HAL_TIM_SET_COMPARE(p_mot->htim,p_mot->channelB,0);
 }
 
-void Set_Duty(motor_t* p_mot,int32_t speed) { //100% is 4799
+void Set_Duty(motor_t* p_mot,int32_t speed) { //100% is 399
 	if(!speed){
-		p_mot->dutyCycle = 4799;
-		__HAL_TIM_SET_COMPARE(p_mot->htim,p_mot->channelA,4799);
-		__HAL_TIM_SET_COMPARE(p_mot->htim,p_mot->channelB,4799);
+		p_mot->dutyCycle = 399;
+		__HAL_TIM_SET_COMPARE(p_mot->htim,p_mot->channelA,399);
+		__HAL_TIM_SET_COMPARE(p_mot->htim,p_mot->channelB,399);
 	}
 	else if(speed > 0 && speed <= 100) {
-		p_mot->dutyCycle = 48*speed-1;
-		__HAL_TIM_SET_COMPARE(p_mot->htim,p_mot->channelA,48*speed-1);
+		p_mot->dutyCycle = 4*speed-1;
+		__HAL_TIM_SET_COMPARE(p_mot->htim,p_mot->channelA,4*speed-1);
 		__HAL_TIM_SET_COMPARE(p_mot->htim,p_mot->channelB,0);
 	}
 	else if (speed < 0 && speed >= -100) {
-		p_mot->dutyCycle = -48*speed-1;
+		p_mot->dutyCycle = -4*speed-1;
 		__HAL_TIM_SET_COMPARE(p_mot->htim,p_mot->channelA,0);
-		__HAL_TIM_SET_COMPARE(p_mot->htim,p_mot->channelB,-48*speed-1);
+		__HAL_TIM_SET_COMPARE(p_mot->htim,p_mot->channelB,-4*speed-1);
 	}
 }
 

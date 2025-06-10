@@ -8,13 +8,11 @@
 #include "joint.h"
 
 //HELPER FUNCTIONS:
-int Read_Velocity(TIM_HandleTypeDef* htim, int dt_ms)
+void Read_Encoder(joint* joint, int dt_ms)
 {
-	static int prev_count = 0;
-	static int initialized = 0;
 
-	int curr_count = __HAL_TIM_GET_COUNTER(htim);
-	int delta = curr_count - prev_count;
+	int curr_count = __HAL_TIM_GET_COUNTER(joint->encoderHandle);
+	int delta = curr_count - joint->previousEncoderCount;
 
 	 // Handle 16-bit counter overflow/underflow
 	if (delta > 32767) {
@@ -23,14 +21,15 @@ int Read_Velocity(TIM_HandleTypeDef* htim, int dt_ms)
 	else if (delta < -32768) {
 		delta += 65536;
 	}
-	if (!initialized) {
+	if (!joint->encoder_init) {
 		delta = 0;  // Avoid spike on first call
-	    initialized = 1;
+	    joint->encoder_init = 1;
 	}
 
-	prev_count = curr_count;
+	joint->previousEncoderCount = curr_count;
 
-	return delta / dt_ms;
+	joint->actual_velocity = delta / dt_ms;
+	joint->actual_position = joint->actual_position + delta;
 }
 
 //DEF FUNCTIONS
@@ -49,15 +48,20 @@ void Joint_Init(joint* joint, motor_t* p_mot, TIM_HandleTypeDef* encoderHandle,
 	joint->p_mot = p_mot;
 	joint->encoderHandle = encoderHandle;
 	joint->enable = 1;
+
+	joint->previousEncoderCount = 0;
+	joint->encoder_init = 0;
 }
 
 void Joint_Update(joint* joint, int dt_ms)
 {
 	static int outer_loop_counter = 0;
 
-	joint->actual_position = __HAL_TIM_GET_COUNTER(joint->encoderHandle);
-	joint->actual_velocity = Read_Velocity(joint->encoderHandle,dt_ms);
+	Read_Encoder(joint,dt_ms); //gets position and velocity
 
+	if(!joint->enable){
+		return;
+	}
 	//run outer loop every 10 calls
 	if(outer_loop_counter == 0)
 	{
@@ -72,7 +76,7 @@ void Joint_Update(joint* joint, int dt_ms)
 	Set_Duty(joint->p_mot,joint->control_output);
 
 	outer_loop_counter++;
-	if(outer_loop_counter >= 10){
+	if(outer_loop_counter >= 2){ //ratio of outer loop to inner loop control
 		outer_loop_counter = 0;
 	}
 }

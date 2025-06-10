@@ -69,11 +69,9 @@ joint shoulderYaw;
 joint shoulderPitch;
 joint elbowPitch;
 
-int32_t encoder1_position;
-int32_t encoder2_position;
-int32_t encoder3_position;
-
 int32_t angles[4];
+
+int32_t amIrunning = 0;
 
 /* USER CODE END PV */
 
@@ -142,8 +140,6 @@ int main(void)
   HAL_TIM_PWM_Start(&htim5,TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim5,TIM_CHANNEL_2);
 
-  HAL_TIM_Base_Start_IT(&htim10);
-
   HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
@@ -153,20 +149,22 @@ int main(void)
   Motor_Init(&motor_3,&htim5,TIM_CHANNEL_1,TIM_CHANNEL_2);
 
   //PID_Init(PIDController* pid, float kp, float ki, float kd, float out_min, float out_max);
-  PID_Init(&motor1_pos,0.1,0,0,-2,2);//max right now is rad/s -> need to do a whole unit analysis
-  PID_Init(&motor1_vel,0.1,0,0,-100,100); //output is PWM signal
+  PID_Init(&motor1_pos,0.4,0.062,40,750,15,-150,150);//max/min is ticks/ms
+  PID_Init(&motor1_vel,0.4,0.085,60,350,3,-80,80); //output is PWM signal
 
-  PID_Init(&motor2_pos,0.1,0,0,-2,2);//max right now is rad/s -> need to do a whole unit analysis
-  PID_Init(&motor2_vel,0.1,0,0,-100,100); //output is PWM signal
+  PID_Init(&motor2_pos,0.4,0.062,0,750,20,-100,100);//max/min is ticks/ms
+  PID_Init(&motor2_vel,0.4,0.085,0,350,4,-80,80); //output is PWM signal
 
-  PID_Init(&motor2_pos,0.1,0,0,-2,2);//max right now is rad/s -> need to do a whole unit analysis
-  PID_Init(&motor2_vel,0.1,0,0,-100,100); //output is PWM signal
+  PID_Init(&motor3_pos,0.4,0.062,0,750,20,-200,200);//max/min is ticks/ms
+  PID_Init(&motor3_vel,0.4,0.085,0,350,4,-80,80); //output is PWM signal
 
   //Joint_Init(Joint* joint, motor* p_mot, TIM_HandleTypeDef* encoderHandle,
 	//PIDController* pos_pid,PIDController* vel_pid);
   Joint_Init(&shoulderYaw,&motor_1,&htim1,&motor1_pos,&motor1_vel);
   Joint_Init(&shoulderPitch,&motor_2,&htim2,&motor2_pos,&motor2_vel);
   Joint_Init(&elbowPitch,&motor_3,&htim3,&motor3_pos,&motor3_vel);
+
+  HAL_TIM_Base_Start_IT(&htim10);
 
   /* USER CODE END 2 */
 
@@ -177,9 +175,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    encoder1_position = __HAL_TIM_GET_COUNTER(&htim1);
-    encoder2_position = __HAL_TIM_GET_COUNTER(&htim2);
-    encoder3_position = __HAL_TIM_GET_COUNTER(&htim3);
   }
   /* USER CODE END 3 */
 }
@@ -348,7 +343,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 0;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 4294967295;
+  htim2.Init.Period = 65535;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   sConfig.EncoderMode = TIM_ENCODERMODE_TI1;
@@ -446,7 +441,7 @@ static void MX_TIM4_Init(void)
   htim4.Instance = TIM4;
   htim4.Init.Prescaler = 0;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 4799;
+  htim4.Init.Period = 399;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_PWM_Init(&htim4) != HAL_OK)
@@ -507,7 +502,7 @@ static void MX_TIM5_Init(void)
   htim5.Instance = TIM5;
   htim5.Init.Prescaler = 0;
   htim5.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim5.Init.Period = 4799;
+  htim5.Init.Period = 399;
   htim5.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim5.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_PWM_Init(&htim5) != HAL_OK)
@@ -529,14 +524,6 @@ static void MX_TIM5_Init(void)
     Error_Handler();
   }
   if (HAL_TIM_PWM_ConfigChannel(&htim5, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_PWM_ConfigChannel(&htim5, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_PWM_ConfigChannel(&htim5, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
   {
     Error_Handler();
   }
@@ -563,9 +550,9 @@ static void MX_TIM10_Init(void)
 
   /* USER CODE END TIM10_Init 1 */
   htim10.Instance = TIM10;
-  htim10.Init.Prescaler = 15;
+  htim10.Init.Prescaler = 999;
   htim10.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim10.Init.Period = 999;
+  htim10.Init.Period = 799;
   htim10.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim10.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim10) != HAL_OK)
@@ -632,6 +619,9 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
 
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2|GPIO_PIN_3, GPIO_PIN_RESET);
+
   /*Configure GPIO pin : PC13 */
   GPIO_InitStruct.Pin = GPIO_PIN_13;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -644,6 +634,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PA2 PA3 */
+  GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PB2 PB10 */
   GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_10;
@@ -668,9 +665,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	if(htim->Instance == TIM10)
 	{
 		//PID CONTROL HERE
-		Joint_Update(&shoulderYaw,1);
-		Joint_Update(&shoulderPitch,1);
-		Joint_Update(&elbowPitch,1);
+		Joint_Update(&shoulderYaw,50);
+		Joint_Update(&shoulderPitch,50);
+		Joint_Update(&elbowPitch,50);
 	}
 }
 /* USER CODE END 4 */
