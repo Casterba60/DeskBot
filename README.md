@@ -23,7 +23,7 @@ End Effector: Two-finger gripper actuated by an MG996R servo for basic object ma
 
 Cascading PID Control: Real-time feedback control for DC joints ensures smooth, accurate positioning.
 
-Inverse Kinematics Support: Implements a lightweight IK solver for Cartesian end-effector positioning, enabling intuitive point-to-point motion planning.
+Inverse Kinematics Support [coming soon]: Implements a lightweight IK solver for Cartesian end-effector positioning, enabling intuitive point-to-point motion planning.
 
 Firmware: Written in C for the STM32 platform using STM32Cube or bare-metal HAL, enabling tight control loops and hardware-level optimizations.
 
