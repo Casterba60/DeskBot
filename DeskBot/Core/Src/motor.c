@@ -20,19 +20,19 @@ void Coast(motor_t* p_mot){
 
 void Set_Duty(motor_t* p_mot,int32_t speed) { //100% is 399
 	if(!speed){
-		p_mot->dutyCycle = 399;
-		__HAL_TIM_SET_COMPARE(p_mot->htim,p_mot->channelA,399);
-		__HAL_TIM_SET_COMPARE(p_mot->htim,p_mot->channelB,399);
+		p_mot->dutyCycle = 3599;
+		__HAL_TIM_SET_COMPARE(p_mot->htim,p_mot->channelA,3599);
+		__HAL_TIM_SET_COMPARE(p_mot->htim,p_mot->channelB,3599);
 	}
 	else if(speed > 0 && speed <= 100) {
-		p_mot->dutyCycle = 4*speed-1;
-		__HAL_TIM_SET_COMPARE(p_mot->htim,p_mot->channelA,4*speed-1);
+		p_mot->dutyCycle = 36*speed-1;
+		__HAL_TIM_SET_COMPARE(p_mot->htim,p_mot->channelA,36*speed-1);
 		__HAL_TIM_SET_COMPARE(p_mot->htim,p_mot->channelB,0);
 	}
 	else if (speed < 0 && speed >= -100) {
-		p_mot->dutyCycle = -4*speed-1;
+		p_mot->dutyCycle = -36*speed-1;
 		__HAL_TIM_SET_COMPARE(p_mot->htim,p_mot->channelA,0);
-		__HAL_TIM_SET_COMPARE(p_mot->htim,p_mot->channelB,-4*speed-1);
+		__HAL_TIM_SET_COMPARE(p_mot->htim,p_mot->channelB,-36*speed-1);
 	}
 }
 

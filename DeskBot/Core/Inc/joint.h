@@ -10,6 +10,8 @@
 
 #include "controller.h" //pid controller
 #include "motor.h"
+#include "limit_switch.h"
+#include <stdbool.h>
 
 typedef struct {
 	PIDController position_pid;
@@ -35,5 +37,7 @@ typedef struct {
 void Joint_Init(joint* joint, motor_t* p_mot, TIM_HandleTypeDef* encoderHandle,
 		PIDController* pos_pid,PIDController* vel_pid);
 void Joint_Update(joint* joint, int dt_ms);
+
+bool Joint_Home(joint* joint,LimitSwitch* limswitch,int direction, int speed);
 
 #endif /* INC_JOINT_H_ */

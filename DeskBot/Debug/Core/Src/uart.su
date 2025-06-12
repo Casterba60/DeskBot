@@ -1,0 +1,6 @@
+../Core/Src/uart.c:19:6:UART_Init	16	static
+../Core/Src/uart.c:24:13:send_invalid_message	56	static
+../Core/Src/uart.c:30:13:validate_and_store	16	static
+../Core/Src/uart.c:45:6:UART_ProcessReceivedData	48	static
+../Core/Src/uart.c:64:6:UART_GetLatestAngles	24	static
+../Core/Src/uart.c:71:6:HAL_UART_RxCpltCallback	16	static

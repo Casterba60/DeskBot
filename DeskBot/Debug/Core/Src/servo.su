@@ -1,0 +1,4 @@
+../Core/Src/servo.c:25:6:servo_init_timer	16	static
+../Core/Src/servo.c:33:8:servo_add	16	static
+../Core/Src/servo.c:42:6:servo_set_angle	24	static
+../Core/Src/servo.c:52:6:servo_update_tick	16	static

@@ -24,6 +24,9 @@
 #include"motor.h"
 #include "controller.h"
 #include "joint.h"
+#include "servo.h"
+#include "limit_switch.h"
+#include "uart.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,11 +52,13 @@ TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 TIM_HandleTypeDef htim5;
+TIM_HandleTypeDef htim9;
 TIM_HandleTypeDef htim10;
 
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
+
 motor_t motor_1;
 motor_t motor_2;
 motor_t motor_3;
@@ -69,9 +74,15 @@ joint shoulderYaw;
 joint shoulderPitch;
 joint elbowPitch;
 
-int32_t angles[4];
+LimitSwitch shoulderYawLMSW;
+LimitSwitch shoulderPitchLMSW;
+LimitSwitch elbowPitchLMSW;
 
-int32_t amIrunning = 0;
+bool calibrated[3] = { 0 };
+
+JointAngles angles;
+int32_t commands[5] = {0,0,0,90,0};
+
 
 /* USER CODE END PV */
 
@@ -86,6 +97,7 @@ static void MX_TIM4_Init(void);
 static void MX_TIM5_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_TIM10_Init(void);
+static void MX_TIM9_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -132,6 +144,7 @@ int main(void)
   MX_TIM5_Init();
   MX_USART1_UART_Init();
   MX_TIM10_Init();
+  MX_TIM9_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_PWM_Start(&htim4,TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim4,TIM_CHANNEL_2);
@@ -164,8 +177,17 @@ int main(void)
   Joint_Init(&shoulderPitch,&motor_2,&htim2,&motor2_pos,&motor2_vel);
   Joint_Init(&elbowPitch,&motor_3,&htim3,&motor3_pos,&motor3_vel);
 
-  HAL_TIM_Base_Start_IT(&htim10);
+  LimitSwitch_Init(&shoulderYawLMSW,GPIOC, GPIO_PIN_14);
+  LimitSwitch_Init(&shoulderPitchLMSW,GPIOA,GPIO_PIN_11);
+  LimitSwitch_Init(&elbowPitchLMSW,GPIOC,GPIO_PIN_15);
 
+  HAL_TIM_Base_Start_IT(&htim10);
+  servo_init_timer(&htim9);
+
+  int8_t gripperServo = servo_add(GPIOA, 3);  // PA2 - Gripper
+  int8_t wristServo = servo_add(GPIOA, 2);  // PA3 - Wrist
+
+  UART_Init(&huart1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -175,6 +197,37 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  while (!(calibrated[0] && calibrated[1] && calibrated[2])) {
+		  // Loop until all flags are true
+		  if(!calibrated[0])
+		  {
+			  calibrated[0] = Joint_Home(&shoulderYaw,&shoulderYawLMSW,1,60);
+		  }
+		  if(!calibrated[1])
+		  {
+			  calibrated[1] = Joint_Home(&shoulderPitch,&shoulderPitchLMSW,1,60);
+		  }
+		  if(!calibrated[2])
+		  {
+			  calibrated[2] = Joint_Home(&elbowPitch,&elbowPitchLMSW,-1,75);
+		  }
+	  }
+	  UART_ProcessReceivedData(); // Non-blocking parse handler
+	      if (UART_GetLatestAngles(&angles)) {
+	    	  //27.125 encoder ticks/deg for base
+	    	  //108.5 for the shoulder and elbow
+	    	  //replace this with a IK solver in the future...
+	    	  commands[0] = (int)13.56*angles.theta1;
+	    	  commands[1] = -1*(int)54.25*angles.theta2;
+	    	  commands[2] = (int)54.25*angles.theta3;
+	    	  commands[3] = angles.theta4;
+	    	  commands[4] = angles.theta5;
+	    	  shoulderYaw.desired_position = commands[0];
+	    	  shoulderPitch.desired_position = commands[1];
+	    	  elbowPitch.desired_position = commands[2];
+	    	  servo_set_angle(wristServo,commands[3]);
+	    	  servo_set_angle(gripperServo,commands[4]);
+	      }
   }
   /* USER CODE END 3 */
 }
@@ -196,10 +249,14 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 4;
+  RCC_OscInitStruct.PLL.PLLN = 72;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = 3;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -209,12 +266,12 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
     Error_Handler();
   }
@@ -441,7 +498,7 @@ static void MX_TIM4_Init(void)
   htim4.Instance = TIM4;
   htim4.Init.Prescaler = 0;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 399;
+  htim4.Init.Period = 3599;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_PWM_Init(&htim4) != HAL_OK)
@@ -502,7 +559,7 @@ static void MX_TIM5_Init(void)
   htim5.Instance = TIM5;
   htim5.Init.Prescaler = 0;
   htim5.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim5.Init.Period = 399;
+  htim5.Init.Period = 3599;
   htim5.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim5.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_PWM_Init(&htim5) != HAL_OK)
@@ -535,6 +592,44 @@ static void MX_TIM5_Init(void)
 }
 
 /**
+  * @brief TIM9 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM9_Init(void)
+{
+
+  /* USER CODE BEGIN TIM9_Init 0 */
+
+  /* USER CODE END TIM9_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+
+  /* USER CODE BEGIN TIM9_Init 1 */
+
+  /* USER CODE END TIM9_Init 1 */
+  htim9.Instance = TIM9;
+  htim9.Init.Prescaler = 71;
+  htim9.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim9.Init.Period = 4;
+  htim9.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim9.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim9) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim9, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM9_Init 2 */
+
+  /* USER CODE END TIM9_Init 2 */
+
+}
+
+/**
   * @brief TIM10 Initialization Function
   * @param None
   * @retval None
@@ -550,7 +645,7 @@ static void MX_TIM10_Init(void)
 
   /* USER CODE END TIM10_Init 1 */
   htim10.Instance = TIM10;
-  htim10.Init.Prescaler = 999;
+  htim10.Init.Prescaler = 4499;
   htim10.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim10.Init.Period = 799;
   htim10.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -632,14 +727,14 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pins : PC14 PC15 */
   GPIO_InitStruct.Pin = GPIO_PIN_14|GPIO_PIN_15;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PA2 PA3 */
   GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PB2 PB10 */
@@ -648,8 +743,14 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PA11 PA12 */
-  GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12;
+  /*Configure GPIO pin : PA11 */
+  GPIO_InitStruct.Pin = GPIO_PIN_11;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PA12 */
+  GPIO_InitStruct.Pin = GPIO_PIN_12;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -668,6 +769,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		Joint_Update(&shoulderYaw,50);
 		Joint_Update(&shoulderPitch,50);
 		Joint_Update(&elbowPitch,50);
+	}
+	if(htim->Instance == TIM9)
+	{
+		servo_update_tick();
 	}
 }
 /* USER CODE END 4 */

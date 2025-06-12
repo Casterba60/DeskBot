@@ -81,6 +81,26 @@ void Joint_Update(joint* joint, int dt_ms)
 	}
 }
 
+bool Joint_Home(joint* joint,LimitSwitch* limswitch, int direction, int speed)
+{
+	joint->enable = 0;
+	// 1. Set the motor to move in a fixed direction (e.g., -1 or 1)
+	Set_Duty(joint->p_mot, direction * speed);
+
+	// 2. Continuously check the limit switch
+	if (LimitSwitch_IsTriggered(limswitch)) {
+		Set_Duty(joint->p_mot, 0);             // Stop motor
+		joint->actual_position = 0;                 // Zero the software encoder position
+		__HAL_TIM_SET_COUNTER(joint->encoderHandle, 0); // Reset hardware encoder
+		joint->encoder_init = 0;             // Reset filtering state
+		joint->desired_position = 0;
+		joint->enable = 1;
+		return true;  // Homed successfully
+	}
+
+	return false;  // Still homing
+}
+
 
 
 
