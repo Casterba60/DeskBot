@@ -1,0 +1,26 @@
+s and intermediate files
+/Debug/
+/Release/
+/build/
+
+*.o
+*.d
+*.elf
+*.map
+*.hex
+*.bin
+*.lst
+*.su
+
+# IDE-generated metadata (not needed for version control)
+.settings/
+.metadata/
+RemoteSystemsTempFiles/
+
+# Backup and temporary files
+*~
+*.bak
+
+# OS-specific files
+.DS_Store
+Thumbs.db
