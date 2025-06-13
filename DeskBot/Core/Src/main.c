@@ -108,9 +108,16 @@ static void MX_TIM9_Init(void);
 /* USER CODE END 0 */
 
 /**
-  * @brief  The application entry point.
-  * @retval int
-  */
+ * @brief Main program entry point.
+ *
+ * This function initializes all hardware peripherals, sets up motors,
+ * PID controllers, and enters a loop that:
+ * - Performs joint homing using limit switches
+ * - Parses UART-based angle commands
+ * - Updates joint setpoints and servo angles
+ *
+ * @retval int Always returns 0.
+ */
 int main(void)
 {
 
@@ -761,6 +768,12 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+/**
+ * @brief Periodic interrupt callback from TIM10 and TIM9.
+ *
+ * TIM10: Triggers joint PID updates every 50 ms.
+ * TIM9 : Triggers software PWM updates for servos.
+ */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if(htim->Instance == TIM10)

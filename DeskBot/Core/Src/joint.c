@@ -7,7 +7,14 @@
 
 #include "joint.h"
 
-//HELPER FUNCTIONS:
+/**
+ * @brief Reads encoder position and calculates velocity for the joint.
+ *
+ * Applies overflow correction for 16-bit timer. First read is ignored for velocity.
+ *
+ * @param joint Pointer to the joint object.
+ * @param dt_ms Time delta since last update in milliseconds.
+ */
 void Read_Encoder(joint* joint, int dt_ms)
 {
 
@@ -32,7 +39,17 @@ void Read_Encoder(joint* joint, int dt_ms)
 	joint->actual_position = joint->actual_position + delta;
 }
 
-//DEF FUNCTIONS
+/**
+ * @brief Initializes a joint with motor, encoder, and PID configuration.
+ *
+ * Resets all control variables and enables the joint.
+ *
+ * @param joint Pointer to the joint object.
+ * @param p_mot Pointer to the motor object.
+ * @param encoderHandle Timer handle for quadrature encoder input.
+ * @param pos_pid Pointer to position PID controller config.
+ * @param vel_pid Pointer to velocity PID controller config.
+ */
 void Joint_Init(joint* joint, motor_t* p_mot, TIM_HandleTypeDef* encoderHandle,
 		PIDController* pos_pid,PIDController* vel_pid)
 {
@@ -53,6 +70,15 @@ void Joint_Init(joint* joint, motor_t* p_mot, TIM_HandleTypeDef* encoderHandle,
 	joint->encoder_init = 0;
 }
 
+/**
+ * @brief Runs the joint control update for one time step.
+ *
+ * Combines outer-loop (position) and inner-loop (velocity) PID control.
+ * Outer loop runs every 2 updates for efficiency.
+ *
+ * @param joint Pointer to the joint object.
+ * @param dt_ms Time delta since last update in milliseconds.
+ */
 void Joint_Update(joint* joint, int dt_ms)
 {
 	static int outer_loop_counter = 0;
@@ -81,6 +107,17 @@ void Joint_Update(joint* joint, int dt_ms)
 	}
 }
 
+/**
+ * @brief Homes the joint using a limit switch and resets encoder.
+ *
+ * Drives motor at fixed speed until limit switch is triggered, then zeroes the position.
+ *
+ * @param joint Pointer to the joint object.
+ * @param limswitch Pointer to the limit switch to use.
+ * @param direction Direction to move motor during homing (-1 or +1).
+ * @param speed Speed to apply while homing.
+ * @return true if homed successfully, false if still homing.
+ */
 bool Joint_Home(joint* joint,LimitSwitch* limswitch, int direction, int speed)
 {
 	joint->enable = 0;

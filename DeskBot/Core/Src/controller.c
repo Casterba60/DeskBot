@@ -5,7 +5,22 @@
  *      Author: cole
  */
 #include "controller.h"
+#include <stdlib.h>
 
+/**
+ * @brief Initializes a PID controller structure with provided parameters.
+ *
+ * Sets the PID gains and clamps, and resets all dynamic state variables.
+ *
+ * @param pid Pointer to the PIDController struct.
+ * @param kp Proportional gain.
+ * @param ki Integral gain.
+ * @param kd Derivative gain.
+ * @param integral_clamp Maximum absolute value of the integral term.
+ * @param tolerable_error Error threshold for resetting the integral term.
+ * @param out_min Minimum output value.
+ * @param out_max Maximum output value.
+ */
 void PID_Init(PIDController* pid, float kp, float ki, float kd, int integral_clamp, int tolerable_error, int out_min, int out_max)
 {
 	pid->kp = kp;
@@ -20,6 +35,18 @@ void PID_Init(PIDController* pid, float kp, float ki, float kd, int integral_cla
 	pid->tolerable_error = tolerable_error;
 }
 
+/**
+ * @brief Executes one update step of the PID controller.
+ *
+ * Computes the control output based on the current setpoint and measured value.
+ * Includes anti-windup for the integral term and output clamping.
+ *
+ * @param pid Pointer to the PIDController struct.
+ * @param setpoint The desired target value.
+ * @param measured The current measured value.
+ * @param dt Time elapsed since the last update (e.g., in ms).
+ * @return The clamped PID output value.
+ */
 int PID_Update(PIDController* pid, int setpoint, int measured, int dt)
 {
 	int error = setpoint - measured;
@@ -58,6 +85,13 @@ int PID_Update(PIDController* pid, int setpoint, int measured, int dt)
 	return pid->output;
 }
 
+/**
+ * @brief Resets the PID controller's dynamic state.
+ *
+ * Clears the integral accumulator, previous error, and output value.
+ *
+ * @param pid Pointer to the PIDController struct.
+ */
 void PID_Reset(PIDController* pid)
 {
     pid->integral = 0;

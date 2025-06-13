@@ -8,15 +8,22 @@
 #ifndef INC_LIMIT_SWITCH_H
 #define INC_LIMIT_SWITCH_H
 
-#include "stm32f4xx_hal.h"  // Adjust this include as needed for your STM32 family
+#include "stm32f4xx_hal.h"
 
+/**
+ * @brief Struct representing a digital limit switch input.
+ */
 typedef struct {
-    GPIO_TypeDef *port;
-    uint16_t pin;
+	GPIO_TypeDef *port;  /**< GPIO port of the limit switch */
+	uint16_t pin;        /**< GPIO pin number */
 } LimitSwitch;
 
 /**
- * @brief Initialize a limit switch.
+ * @brief Initializes a limit switch object with a specified GPIO port and pin.
+ *
+ * Note: This function does not configure the GPIO as input. You must do that in
+ * MX_GPIO_Init() or equivalent HAL setup.
+ *
  * @param switch_obj Pointer to a LimitSwitch struct.
  * @param port GPIO port (e.g., GPIOA, GPIOB).
  * @param pin GPIO pin number (e.g., GPIO_PIN_0).
@@ -24,9 +31,13 @@ typedef struct {
 void LimitSwitch_Init(LimitSwitch *switch_obj, GPIO_TypeDef *port, uint16_t pin);
 
 /**
- * @brief Check if the limit switch is triggered (pressed/activated).
+ * @brief Checks whether the limit switch is currently triggered (pressed).
+ *
+ * Assumes an active-low switch (triggered when pin is pulled LOW). Modify if your
+ * hardware uses active-high logic.
+ *
  * @param switch_obj Pointer to a LimitSwitch struct.
- * @retval 1 if triggered, 0 otherwise.
+ * @retval 1 if triggered (pressed), 0 otherwise.
  */
 uint8_t LimitSwitch_IsTriggered(LimitSwitch *switch_obj);
 

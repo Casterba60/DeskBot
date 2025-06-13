@@ -13,31 +13,66 @@
 #include "limit_switch.h"
 #include <stdbool.h>
 
+/**
+ * @brief Structure representing a joint with dual-loop PID control.
+ *
+ * Combines motor control, encoder feedback, and hierarchical PID loops for position and velocity.
+ */
 typedef struct {
-	PIDController position_pid;
-	PIDController velocity_pid;
+	PIDController position_pid;           /**< Outer loop: Position PID controller */
+	PIDController velocity_pid;           /**< Inner loop: Velocity PID controller */
 
-	int desired_position; //input command (encoder ticks)
-	int desired_velocity; //Output of position
+	int desired_position;                 /**< Target position in encoder ticks */
+	int desired_velocity;                 /**< Target velocity (output of position PID) */
 
-	int actual_position; //Encoder reading
-	int actual_velocity; //Measured velocity (change in enc / dt)
+	int actual_position;                  /**< Measured encoder position */
+	int actual_velocity;                  /**< Measured velocity (ticks/dt) */
 
-	int control_output; // Final output to motor (0 - 100)
-	//motor and encoder
-	motor_t* p_mot; //pointer to motor struct
-	TIM_HandleTypeDef* encoderHandle; //pointer to encoder handle
+	int control_output;                   /**< Final control effort passed to motor */
 
-	int previousEncoderCount;
-	int encoder_init;
+	motor_t* p_mot;                       /**< Pointer to motor structure */
+	TIM_HandleTypeDef* encoderHandle;     /**< Pointer to encoder timer */
 
-	int enable;
+	int previousEncoderCount;             /**< Previous encoder count for velocity calc */
+	int encoder_init;                     /**< Flag for first encoder read */
+
+	int enable;                           /**< Joint enable flag (1 = active, 0 = ignore) */
 } joint;
 
+/**
+ * @brief Initializes a joint with motor, encoder, and PID parameters.
+ *
+ * @param joint Pointer to the joint object.
+ * @param p_mot Pointer to the motor structure.
+ * @param encoderHandle Pointer to the timer used as quadrature encoder.
+ * @param pos_pid Pointer to position PID controller config.
+ * @param vel_pid Pointer to velocity PID controller config.
+ */
 void Joint_Init(joint* joint, motor_t* p_mot, TIM_HandleTypeDef* encoderHandle,
 		PIDController* pos_pid,PIDController* vel_pid);
+
+/**
+ * @brief Updates the joint control loop (called periodically).
+ *
+ * Reads encoder values, computes desired velocity (outer loop),
+ * and applies velocity PID to generate motor control output (inner loop).
+ *
+ * @param joint Pointer to the joint object.
+ * @param dt_ms Time step since last update (in milliseconds).
+ */
 void Joint_Update(joint* joint, int dt_ms);
 
+/**
+ * @brief Homes the joint using a limit switch.
+ *
+ * Drives motor in specified direction until the switch is triggered, then resets encoder position.
+ *
+ * @param joint Pointer to the joint object.
+ * @param limswitch Pointer to limit switch object.
+ * @param direction Direction to drive motor during homing (-1 or +1).
+ * @param speed Speed to apply while homing.
+ * @return true if homing is complete; false if still in progress.
+ */
 bool Joint_Home(joint* joint,LimitSwitch* limswitch,int direction, int speed);
 
 #endif /* INC_JOINT_H_ */
