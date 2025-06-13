@@ -1,6 +1,5 @@
 # Build artifacts and intermediate files
-/Debug/
-/Release/
+DeskBot/Debug/
 *.o
 *.d
 *.elf
