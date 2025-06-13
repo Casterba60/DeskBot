@@ -1,21 +1,24 @@
-# STM32CubeIDE build artifacts
-firmware/STM32/DeskBot_Firmware/Debug/
-firmware/STM32/DeskBot_Firmware/Release/
+# Build artifacts and intermediate files
+/Debug/
+/Release/
+*.o
+*.d
 *.elf
 *.bin
 *.hex
 *.map
-*.o
-*.d
-*.su
 *.lst
+*.su
 
-# STM32CubeIDE metadata
-firmware/STM32/DeskBot_Firmware/.settings/
-firmware/STM32/DeskBot_Firmware/.metadata/
-firmware/STM32/DeskBot_Firmware/RemoteSystemsTempFiles/
+# STM32CubeIDE-specific directories
+/.settings/
+/.metadata/
+/RemoteSystemsTempFiles/
 
-# Backup & system files
+# Backup and temporary files
 *~
+*.bak
+
+# OS-specific files
 .DS_Store
 Thumbs.db
