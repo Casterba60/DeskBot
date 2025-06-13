@@ -1,3 +1,0 @@
-../Core/Src/motor.c:9:6:Motor_Init	1
-../Core/Src/motor.c:16:6:Coast	7
-../Core/Src/motor.c:21:6:Set_Duty	24

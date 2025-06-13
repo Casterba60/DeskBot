@@ -1,2 +1,0 @@
-../Core/Src/limit_switch.c:13:6:LimitSwitch_Init	24	static
-../Core/Src/limit_switch.c:21:9:LimitSwitch_IsTriggered	16	static

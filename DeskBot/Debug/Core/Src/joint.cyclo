@@ -1,4 +1,0 @@
-../Core/Src/joint.c:11:6:Read_Encoder	4
-../Core/Src/joint.c:36:6:Joint_Init	1
-../Core/Src/joint.c:56:6:Joint_Update	4
-../Core/Src/joint.c:84:6:Joint_Home	2

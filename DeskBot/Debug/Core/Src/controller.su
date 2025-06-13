@@ -1,3 +1,0 @@
-../Core/Src/controller.c:9:6:PID_Init	40	static
-../Core/Src/controller.c:23:5:PID_Update	32	static
-../Core/Src/controller.c:61:6:PID_Reset	16	static
