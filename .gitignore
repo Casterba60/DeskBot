@@ -1,0 +1,24 @@
+# Build artifacts and intermediate files
+/Debug/
+/Release/
+*.o
+*.d
+*.elf
+*.bin
+*.hex
+*.map
+*.lst
+*.su
+
+# STM32CubeIDE-specific directories
+/.settings/
+/.metadata/
+/RemoteSystemsTempFiles/
+
+# Backup and temporary files
+*~
+*.bak
+
+# OS-specific files
+.DS_Store
+Thumbs.db
