@@ -1,4 +1,7 @@
-# DeskBot
+# DeskBot 
+
+https://casterba60.github.io/DeskBot/
+
 This is a fully 3D-printed, 4-DOF robotic arm built for precision motion control and educational exploration of embedded systems and robotics. The system uses a hybrid actuation scheme combining geared DC motors for high-torque joints and MG996R servos for lightweight, responsive movements at the wrist and gripper. A custom-designed PCB centered around an STM32 microcontroller powers the control logic, offering real-time performance and rich peripheral support.
 
 **Key Features**
