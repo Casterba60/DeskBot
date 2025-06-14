@@ -1,0 +1,7 @@
+var searchData=
+[
+  ['pid_5finit_0',['PID_Init',['../controller_8h.html#ac6b91cd639b0e3bd54065c07ba54b0ad',1,'PID_Init(PIDController *pid, float kp, float ki, float kd, int integral_clamp, int tolerable_error, int out_min, int out_max):&#160;controller.c'],['../controller_8c.html#ac6b91cd639b0e3bd54065c07ba54b0ad',1,'PID_Init(PIDController *pid, float kp, float ki, float kd, int integral_clamp, int tolerable_error, int out_min, int out_max):&#160;controller.c']]],
+  ['pid_5freset_1',['PID_Reset',['../controller_8h.html#a831175d36a5aada3b017c77256026ffc',1,'PID_Reset(PIDController *pid):&#160;controller.c'],['../controller_8c.html#a831175d36a5aada3b017c77256026ffc',1,'PID_Reset(PIDController *pid):&#160;controller.c']]],
+  ['pid_5fupdate_2',['PID_Update',['../controller_8h.html#aea21866d20385943adecd5eed051bd64',1,'PID_Update(PIDController *pid, int setpoint, int measured, int dt):&#160;controller.c'],['../controller_8c.html#aea21866d20385943adecd5eed051bd64',1,'PID_Update(PIDController *pid, int setpoint, int measured, int dt):&#160;controller.c']]],
+  ['plot3_3',['plot3',['../_forward_kinematics_8m.html#a08dca6ba313c24c04b52dcc84c572c55',1,'plot3(X, Y, Z, &apos;-o&apos;, &apos;LineWidth&apos;, 2, &apos;MarkerSize&apos;, 6):&#160;ForwardKinematics.m'],['../_inverse_kinematics_8m.html#a08dca6ba313c24c04b52dcc84c572c55',1,'plot3(X, Y, Z, &apos;-o&apos;, &apos;LineWidth&apos;, 2, &apos;MarkerSize&apos;, 6):&#160;InverseKinematics.m']]]
+];
